@@ -13,7 +13,7 @@ const store = opts => {
   var keyidx = 0
   return {
     M: opts.M || 3,
-    put: node => opts.nodes[node.key] = node,
+    put: (key, node) => opts.nodes[key] = node,
     key: () => opts.keys[keyidx++],
     get: key => opts.nodes[key]
   }
@@ -28,7 +28,7 @@ describe('insert', function () {
 
     const entry = { id: 1000, box: [[0, 0], [1, 1]] }
     const insert = Insert(store(opts))
-    const groups = await insert(nodes[root], entry)
+    const groups = await insert(root, entry)
 
     assert.strictEqual(groups.length, 1) // no split: original (root) node
     assert.deepEqual(nodes, expected)
@@ -42,7 +42,7 @@ describe('insert', function () {
 
     const entry = { box: [[8, 8], [9, 9]], id: 1010 }
     const insert = Insert(store(opts))
-    const groups = await insert(nodes[root], entry)
+    const groups = await insert(root, entry)
 
     assert.strictEqual(groups.length, 2) // split: new sibling leaf
     assert.deepEqual(nodes, expected)
@@ -56,7 +56,7 @@ describe('insert', function () {
 
     const entry = { box: [[-2, -1], [0, 0]], id: 1011 }
     const insert = Insert(store(opts))
-    const groups = await insert(nodes[root], entry)
+    const groups = await insert(root, entry)
     assert.strictEqual(groups.length, 1) // no root split
     assert.deepEqual(nodes, expected)
   })

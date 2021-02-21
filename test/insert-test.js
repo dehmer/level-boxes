@@ -14,14 +14,17 @@ const store = opts => {
   return {
     M: opts.M || 3,
     put: (key, node) => opts.nodes[key] = node,
-    key: () => opts.keys[keyidx++],
+    key: () => {
+      if (keyidx === opts.keys.length) throw Error('key pool underflow')
+      return opts.keys[keyidx++]
+    },
     get: key => opts.nodes[key]
   }
 }
 
 describe('insert', function () {
 
-  it('[I--L01] appends to leaf with enough capacity (direct)', async function () {
+  it('[I--L01] no leaf split (root)', async function () {
     const root = 'a4020a1f-ffcd-4684-b597-b5aa0372b558'
     const { nodes, expected } = fixture('I--L01')
     const opts = { M: 3, nodes }
@@ -34,7 +37,7 @@ describe('insert', function () {
     assert.deepEqual(nodes, expected)
   })
 
-  it('[I--L02] splits leaf on overflow', async function () {
+  it('[I--L02] leaf split (root)', async function () {
     const root = 'a4020a1f-ffcd-4684-b597-b5aa0372b558'
     const { nodes, expected } = fixture('I--L02')
     const keys = ['efa87b5c-1334-4537-a342-552a28ca6a2d']
@@ -48,7 +51,7 @@ describe('insert', function () {
     assert.deepEqual(nodes, expected)
   })
 
-  it('[I--I01] appends to leaf with enough capacity (indirect)', async function () {
+  it('[I--I01] no leaf split (non-root)', async function () {
     const root = "44519293-b6a9-4817-be78-0c002380395c"
     const { nodes, expected } = fixture('I--I01')
     const keys = ['efa87b5c-1334-4537-a342-552a28ca6a2d']
@@ -58,6 +61,40 @@ describe('insert', function () {
     const insert = Insert(store(opts))
     const groups = await insert(root, entry)
     assert.strictEqual(groups.length, 1) // no root split
+    assert.deepEqual(nodes, expected)
+  })
+
+  it('[I--I02] leaf split (non-root)', async function () {
+    const root = '44519293-b6a9-4817-be78-0c002380395c'
+    const { nodes, expected } = fixture('I--I02')
+    const keys = ['876a03f8-fa01-4db3-95b3-81d8c6d2b0b7']
+    const opts = { M: 3, nodes, keys }
+
+    const entry = { box: [[3, 4], [5, 12]], id: 1011 }
+    const insert = Insert(store(opts))
+    const groups = await insert(root, entry)
+
+    assert.strictEqual(groups.length, 1) // no root split
+    assert.deepEqual(nodes, expected)
+  })
+
+  it('[I--I03] propagate leaf split', async function () {
+    const root = '44519293-b6a9-4817-be78-0c002380395c'
+    const { nodes, expected } = fixture('I--I03')
+    const keys = [
+      'f3d8f7cf-2945-4139-9209-88445e1a8aeb',
+      'a762c15c-4916-485f-b8e1-d6507ee1ffa2'
+    ]
+
+    const opts = { M: 3, nodes, keys }
+
+    const entry = { box: [[4, 6], [6, 5]], id: 1012 }
+    const insert = Insert(store(opts))
+    const groups = await insert(root, entry)
+    console.log(JSON.stringify(nodes))
+
+    assert.strictEqual(groups.length, 2)
+    assert.strictEqual(groups[1].key, keys[1])
     assert.deepEqual(nodes, expected)
   })
 })

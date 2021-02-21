@@ -1,0 +1,18 @@
+{
+  "nodes":{
+    "a4020a1f-ffcd-4684-b597-b5aa0372b558":{
+      "key":"a4020a1f-ffcd-4684-b597-b5aa0372b558",
+      "entries":[],
+      "leaf":true
+    }
+  },
+
+  "expected":{
+    "a4020a1f-ffcd-4684-b597-b5aa0372b558":{
+      "key":"a4020a1f-ffcd-4684-b597-b5aa0372b558",
+      "box":[[0,0],[1,1]],
+      "entries":[{"id":1000,"box":[[0,0],[1,1]]}],
+      "leaf":true
+    }
+  }
+}

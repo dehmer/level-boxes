@@ -88,10 +88,9 @@ describe('insert', function () {
 
     const opts = { M: 3, nodes, keys }
 
-    const entry = { box: [[4, 6], [6, 5]], id: 1012 }
+    const entry = { box: [[4, 6], [6, 7]], id: 1012 }
     const insert = Insert(store(opts))
     const groups = await insert(root, entry)
-    console.log(JSON.stringify(nodes))
 
     assert.strictEqual(groups.length, 2)
     assert.strictEqual(groups[1].key, keys[1])

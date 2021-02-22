@@ -6,78 +6,37 @@ const levelup = require('levelup')
 const memdown = require('memdown')
 const encode = require('encoding-down')
 const { decode } = require('../lib/shapefile/shapefile')
-
-// M
-// m = M / 2
-// number (entries) = 1 byte
-// I = (xmin, ymin, xmax, ymax) - 4 * 8 bytes => (M + 1) * 32 bytes
-// uuid = 36 bytes (ascii) => M * 36 bytes
-// flags = 1 byte - leaf, underfull => M * 1 bytes
-
-// M:        50    25
-// I:      1632   832
-// uuid:   1800   900
-// flags:     1     1
-// total:  3433  1733
+const rtree = require('../lib/rtree')
 
 const feature = proj => ({ recordNumber, shapeType, box, points }) => {
   // Project minimal bounding rectangle according projection:
-  const mbr = [[box.xmin, box.ymin], [box.xmax, box.ymax]].map(proj)
-  return { p: recordNumber, mbr }
+  return {
+    id: recordNumber,
+    box: [[box.xmin, box.ymin], [box.xmax, box.ymax]].map(proj)
+  }
 }
 
-const load = store => new Writable({
+const load = index => new Writable({
   objectMode: true,
-  async write ({ p, mbr }, _, next) {
-    this.batch = this.batch || store.batch()
-    this.batch.put(p, mbr)
-
-    if (this.batch.length === 500) {
-      await this.batch.write()
-      delete this.batch
-      next()
-    } else next()
-  },
-  async final (next) {
-    await this.batch.write()
-    delete this.batch
+  async write ({ id, box }, _, next) {
+    await index.insert(box, id)
     next()
   }
 })
 
 ;(async () => {
-  const valueEncoding = {
-    type: 'rtee-node',
-    encode: data => {
-      const buffer = Buffer.allocUnsafe(32)
-      buffer.writeDoubleLE(data[0][0],  0)
-      buffer.writeDoubleLE(data[0][1],  8)
-      buffer.writeDoubleLE(data[1][0], 16)
-      buffer.writeDoubleLE(data[1][1], 24)
-      return buffer
-    },
-    decode: buffer => {
-      return [
-        [buffer.readDoubleLE( 0), buffer.readDoubleLE( 8)],
-        [buffer.readDoubleLE(16), buffer.readDoubleLE(24)]
-      ]
-    },
-    buffer: true
-  }
+  const db = levelup(encode(memdown(), { valueEncoding: 'json' }))
+  const index = await rtree(db, { M: 9, split: 'L' })
 
-  // const store = levelup(encode(memdown(), { valueEncoding: 'json' }))
-  const store = levelup(encode(memdown(), { valueEncoding }))
-
-  const read = () => new Promise((resolve, reject) => {
+  const read = index => new Promise((resolve, reject) => {
     const basename = './data/ADR_PT'
     const shapefile = `${basename}.shp`
     const projection = `${basename}.prj`
-
     const proj = proj4(fs.readFileSync(projection, 'utf8')).inverse
 
     fs.createReadStream(shapefile)
       .pipe(decode(feature(proj)))
-      .pipe(load(store))
+      .pipe(load(index))
       .on('finish', resolve)
       .on('error', reject)
   })
@@ -89,7 +48,7 @@ const load = store => new Writable({
   // read:   2.386s  - put: memdown/json (p, mbr)
 
   console.time('read')
-  await read()
+  await read(index)
   console.timeEnd('read')
 })()
 

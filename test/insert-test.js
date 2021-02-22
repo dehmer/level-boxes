@@ -4,9 +4,6 @@ const R = require('ramda')
 const uuid = require('uuid-random')
 const Insert = require('../lib/rtree/insert')
 
-const expected = id => JSON.parse(fs.readFileSync(`./test/expected/${id}.json`, 'utf8'))
-const initial = id => JSON.parse(fs.readFileSync(`./test/initial/${id}.json`, 'utf8'))
-
 const fixture = id => JSON.parse(fs.readFileSync(`./test/fixture/${id}.json`, 'utf8'))
 
 const store = opts => {

@@ -1,10 +1,21 @@
-R-TREE
-* R-TREES. A DYNAMIC INDEX STRUCTURE FOR SPATIAL SEARCHING - Antonin Guttman
-* Main-Memory Operation Buffering for Efficient R-Tree Update
-* The R*-tree - An Efficient and Robust Access Method for Points and Rectangles
-
-CACHE
-* ARC - Nimrod Megiddo, Dharmendra S. Modha
-* An O(1) algorithm for implementing the LFU cache eviction scheme - Shah, Mitra, Matani
-* 2Q - Johnson, Shasha
-* 2001 - Competitive Analysis of the LRFU Paging - Cohen, Kaplan, Zwick
+[1]  Guttman, A., "R-tree: A Dynamic Index Structure for Spatial Searching",
+     Proc. ACM SIGMOD, pp. 703-724, 1986.
+[2]  Biveinis L., Šaltenis S, Jensen C. S., "Main-Memory Operation Buffering
+     for Efficient R-Tree Update", Proc. VLDB, pp. 591-602, 2007.
+[3]  Beckmann N., Kriegel H-P., Schneider, R., Seeger B., "R*-tree: An Efficient
+     and Robust Access Method for Points and Rectangles," Proc. ACM SIGMOD,
+     pp. 322–331, 1990.
+[4]  S. T. Leutenegger, M. A. Lopez and J. Edgington, "STR: a simple and efficient
+     algorithm for R-tree packing," Proceedings 13th International Conference on
+     Data Engineering, pp. 497-506, 1997.
+[5]  T. Lee, Sukho Lee, "OMT: Overlap Minimizing Top-down Bulk Loading Algorithm
+     for R-tree", CAiSE Short Paper Proceedings, 2003.
+[6]  "A Greedy Algorithm for Bulk Loading R-trees"
+[7]  N. Megiddo, D. S. Modha, "Outperforming LRU with an adaptive replacement
+     cache algorithm," in Computer, vol. 37, no. 4, pp. 58-65, April 2004.
+[8]  Prof Ketan, Shah Anirban, Mitra Dhruv Matani, "An O(1) algorithm for
+     implementing the LFU cache eviction scheme", 2010.
+[9]  T. Johnson and D. Shasha, "2Q: A Low Overhead High Performance Buffer
+     Management Replacement Algorithm", Proc. VLDB, 1994.
+[10] Cohen, Kaplan & Zwick, "Competitive Analysis of the LRFU Paging Algorithm",
+     Algorithmica 33, pp. 511–516, 2002.

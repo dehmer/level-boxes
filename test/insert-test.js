@@ -3,19 +3,23 @@ const fs = require('fs')
 const R = require('ramda')
 const uuid = require('uuid-random')
 const Insert = require('../lib/rtree/insert')
+const PickSeeds = require('../lib/rtree/pickseeds')
+const PickNext = require('../lib/rtree/picknext')
 
 const fixture = id => JSON.parse(fs.readFileSync(`./test/fixture/${id}.json`, 'utf8'))
 
-const store = opts => {
+const store = options => {
   var keyidx = 0
   return {
-    M: opts.M || 3,
-    put: (key, node) => opts.nodes[key] = node,
+    M: options.M || 3,
+    pickSeeds: PickSeeds[options.split] || PickSeeds['L'],
+    pickNext: PickNext[options.split] || PickNext['L'],
+    put: (key, node) => options.nodes[key] = node,
     key: () => {
-      if (keyidx === opts.keys.length) throw Error('key pool underflow')
-      return opts.keys[keyidx++]
+      if (keyidx === options.keys.length) throw Error('key pool underflow')
+      return options.keys[keyidx++]
     },
-    get: key => opts.nodes[key]
+    get: key => options.nodes[key]
   }
 }
 

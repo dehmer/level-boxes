@@ -19,6 +19,18 @@ const search = (index, box) => new Promise(async (resolve, reject) => {
 
 describe('rtree', function () {
 
+  it('uses linear split for wrong option', async function () {
+    const db = levelup(encode(memdown(), { valueEncoding: 'json' }))
+    const index = await rtree(db, { split: 'X' })
+    // TODO: assert me!
+  })
+
+  it('uses M = 25 when no options are supplied', async function () {
+    const db = levelup(encode(memdown(), { valueEncoding: 'json' }))
+    const index = await rtree(db)
+    // TODO: assert me!
+  })
+
   it('#insert - add single entry', async function () {
     const db = levelup(encode(memdown(), { valueEncoding: 'json' }))
     const index = await rtree(db, { M: 9, split: 'L' })

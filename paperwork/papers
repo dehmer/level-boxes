@@ -1,0 +1,10 @@
+R-TREE
+* R-TREES. A DYNAMIC INDEX STRUCTURE FOR SPATIAL SEARCHING - Antonin Guttman
+* Main-Memory Operation Buffering for Efficient R-Tree Update
+* The R*-tree - An Efficient and Robust Access Method for Points and Rectangles
+
+CACHE
+* ARC - Nimrod Megiddo, Dharmendra S. Modha
+* An O(1) algorithm for implementing the LFU cache eviction scheme - Shah, Mitra, Matani
+* 2Q - Johnson, Shasha
+* 2001 - Competitive Analysis of the LRFU Paging - Cohen, Kaplan, Zwick

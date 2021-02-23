@@ -3,3 +3,4 @@ data/
 coverage/
 node_modules/
 .DS_Store
+db/

@@ -9,10 +9,18 @@ const encode = require('encoding-down')
 const { decode } = require('../lib/shapefile/shapefile')
 const rtree = require('../lib/rtree')
 
+const dump = async db => new Promise((resolve, reject) => {
+  const acc = []
+  db.createReadStream()
+    .on('data', data => acc.push(data))
+    .on('error', reject)
+    .on('end', () => resolve(acc))
+})
+
 const feature = proj => ({ recordNumber, shapeType, box, points }) => {
-  // Project minimal bounding rectangle according projection:
   return {
     id: recordNumber,
+    // Project minimal bounding rectangle according projection:
     box: [[box.xmin, box.ymin], [box.xmax, box.ymax]].map(proj)
   }
 }
@@ -58,22 +66,97 @@ const encoding = () => {
   }
 }
 
+const datasets = {
+  'ADR_PT': {
+    S: [[11.384, 47.262], [11.386, 47.265]],
+    records: 196911,
+    stats: {
+      'insert:single:linear': {
+        bytesWritten: 782473898, // 746 MB
+        bytesRead: 2614820820, // 2.44 GB
+        encoded: 405867,
+        decoded: 929092,
+        timeRead: '1:07.194 (m:ss.mmm)',
+        timeSearch: '5.854ms'
+      },
+      'insert:bulk:linear': {
+        bytesWritten: 36101082, // 34 MB (4.61%)
+        bytesRead: 0,
+        encoded: 202936,
+        decoded: 0
+      },
+      'insert:bulk:1000:linear': {
+        bytesWritten: 171908855, // 163 MB
+        bytesRead: 135807773, // 129 MB
+        encoded: 236723,
+        decoded: 590149,
+        timeRead: '9.827s',
+        timeSearch: '6.695ms'
+      }
+    }
+  },
+
+  'ne_110m_admin_0_countries': {
+    // cyprus
+    S: [
+      [32.73178022637745, 35.000344550103506],
+      [34.576473829900465, 35.67159556735879]
+    ],
+    records: 177,
+    stats: {
+      'insert:single:linear': {
+        bytesWritten: 585665, // 9.19 MB
+        bytesRead: 622407, // 19.6 MB
+        encoded: 365,
+        decoded: 480
+      },
+      'insert:bulk:linear': {
+        bytesWritten: 31728, // 5.4%
+        bytesRead: 0,
+        encoded: 184, // 38.3%
+        decoded: 0
+      }
+    }
+  },
+
+  'tl_2020_us_county': {
+    records: 3234,
+    stats: {
+      'insert:single:linear': {
+        bytesWritten: 9633108, // 9.19 MB
+        bytesRead: 20621931, // 19.6 MB
+        encoded: 6670,
+        decoded: 11170
+      },
+      'insert:bulk:linear': {
+        bytesWritten: 442391, // 4.59%
+        bytesRead: 0,
+        encoded: 3337,
+        decoded: 0
+      }
+    },
+  }
+}
+
 ;(async () => {
   const valueEncoding = encoding()
-  // const db = levelup(encode(memdown(), { valueEncoding }))
-  const db = levelup(encode(leveldown('./db/index'), { valueEncoding }))
-  const index = await rtree(db, { M: 50, split: 'L' })
+  const db = levelup(encode(memdown(), { valueEncoding }))
+  // const db = levelup(encode(leveldown('./db/index'), { valueEncoding: 'json' }))
 
-  const read = index => new Promise((resolve, reject) => {
-    // const basename = './data/ADR_PT'
-    const basename = './data/ne_110m_admin_0_countries'
+  const index = await rtree(db, { M: 50, split: 'L', batch: 1000 })
+  const dataset = 'ADR_PT'
+
+  const read = index => new Promise(async (resolve, reject) => {
+
+    const basename = `./data/${dataset}`
     const shapefile = `${basename}.shp`
     const projection = `${basename}.prj`
     const proj = proj4(fs.readFileSync(projection, 'utf8')).inverse
 
     fs.createReadStream(shapefile)
       .pipe(decode(feature(proj)))
-      .pipe(load(index))
+      .pipe(await index.bulk())
+      // .pipe(load(index))
       .on('finish', resolve)
       .on('error', reject)
   })
@@ -83,39 +166,16 @@ const encoding = () => {
   console.timeEnd('read')
   console.log('stats', valueEncoding.stats())
 
-  // stats - ADR_PT/LINEAR
-  // bytesWritten:   782473898
-  // bytesRead:     2614820820
-  // encoded:           405867
-  // decoded:           929092
+  // const values = await dump(db)
+  // console.log('values', JSON.stringify(values))
 
-  // stats - ADR_PT/QUADRATIC
-  // bytesWritten:   780525072
-  // bytesRead:     2629268132
-  // encoded:           405567
-  // decoded:           920857
+  const S = datasets[dataset].S
 
-  const cyprus = [
-    [32.73178022637745, 35.000344550103506],
-    [34.576473829900465, 35.67159556735879]
-  ]
-
-  const address = [
-    [11.384, 47.262],
-    [11.386, 47.265]
-  ]
-
-  console.time('search')
-  const hits = await search(index, address)
-  /*
-    [
-       27508, 182440, 180387,
-      180731, 179729, 195505,
-      182867, 189694, 189946,
-      191827, 193752, 145533
-    ]
-  */
-  console.log(hits)
-  console.timeEnd('search')
+  if (S) {
+    console.time('search')
+    const hits = await search(index, S)
+    console.log(hits)
+    console.timeEnd('search')
+  }
 })()
 

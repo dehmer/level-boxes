@@ -11,8 +11,10 @@ const rtree = require('../lib/rtree')
 
 const dump = async db => new Promise((resolve, reject) => {
   const acc = []
-  db.createReadStream()
-    .on('data', data => acc.push(data))
+  db.createReadStream({ keys: false })
+    .on('data', data => {
+      if (data.leaf) acc.push(data)
+    })
     .on('error', reject)
     .on('end', () => resolve(acc))
 })
@@ -70,6 +72,8 @@ const datasets = {
   'ADR_PT': {
     S: [[11.384, 47.262], [11.386, 47.265]],
     records: 196911,
+    nodes: 6025, // leaf + non-leaf
+    leafs: 5838,
     stats: {
       'insert:single:linear': {
         bytesWritten: 782473898, // 746 MB
@@ -88,8 +92,8 @@ const datasets = {
       'insert:bulk:1000:linear': {
         bytesWritten: 171908855, // 163 MB
         bytesRead: 135807773, // 129 MB
-        encoded: 236723,
-        decoded: 590149,
+        encoded: 240000,
+        decoded: 37064,
         timeRead: '9.827s',
         timeSearch: '6.695ms'
       }
@@ -177,5 +181,8 @@ const datasets = {
     console.log(hits)
     console.timeEnd('search')
   }
+
+  const tuples = await dump(db)
+  console.log(tuples.length)
 })()
 
